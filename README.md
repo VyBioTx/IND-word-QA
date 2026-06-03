@@ -14,17 +14,15 @@ storage/   Local uploaded files and future exports
 
 ## Prerequisites
 
-Install [pixi](https://pixi.sh) — a fast, cross-platform package manager.
+Install [pixi](https://pixi.sh) — a fast, cross-platform package manager. All dependencies (Python, Node.js, and frontend npm packages) are managed through pixi.
 
 ## Quick Start
 
-All commands run from the project root via pixi:
-
 ```bash
-# Install dependencies (first time only)
+# Install all dependencies (first time only)
 pixi install
 pixi install --environment dev   # includes test dependencies
-npm install --prefix frontend     # frontend node_modules
+pixi run frontend:install        # install frontend npm packages via pixi-managed npm
 
 # Start backend
 pixi run backend
@@ -54,20 +52,21 @@ API base: http://127.0.0.1:8011
 ## Available Tasks
 
 ```bash
-pixi run backend          # Start FastAPI backend (dev mode, auto-reload)
-pixi run frontend         # Start Vite frontend dev server
-pixi run frontend:build   # Build frontend for production
-pixi run frontend:preview # Preview production build
+pixi run backend            # Start FastAPI backend (dev mode, auto-reload)
+pixi run frontend           # Start Vite frontend dev server
+pixi run frontend:build     # Build frontend for production
+pixi run frontend:preview   # Preview production build
+pixi run frontend:install   # Install frontend npm dependencies
 
 # Verification
-pixi run check:ports      # Check if local ports are free
-pixi run check:health     # Check backend health endpoint
-pixi run test:smoke       # Run smoke tests
-pixi run clear:test-data  # Clear local test data
+pixi run check:ports        # Check if local ports are free
+pixi run check:health       # Check backend health endpoint
+pixi run test:smoke         # Run smoke tests
+pixi run clear:test-data    # Clear local test data
 
 # Dev environment (includes test dependencies)
-pixi run -e dev test            # Run all backend tests
-pixi run -e dev generate:fixtures  # Generate sample docx fixtures
+pixi run -e dev test              # Run all backend tests
+pixi run -e dev generate:fixtures # Generate sample docx fixtures
 ```
 
 These commands verify fixed local ports, environment files, `VITE_API_BASE_URL`, backend `/health`, frontend reachability, and the frontend-to-backend health call.
