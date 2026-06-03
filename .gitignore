@@ -11,3 +11,7 @@ storage/projects/*/exports/
 
 frontend/node_modules/
 frontend/dist/
+# pixi environments
+.pixi/*
+!.pixi/config.toml
+src/

@@ -12,26 +12,25 @@ frontend/  React, TypeScript, Vite, TailwindCSS
 storage/   Local uploaded files and future exports
 ```
 
-## Backend
+## Prerequisites
 
-```powershell
-cd backend
-pip install -r requirements.txt
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8011
-```
+Install [pixi](https://pixi.sh) — a fast, cross-platform package manager.
 
-Health check:
+## Quick Start
 
-```powershell
-Invoke-WebRequest http://127.0.0.1:8011/health
-```
+All commands run from the project root via pixi:
 
-## Frontend
+```bash
+# Install dependencies (first time only)
+pixi install
+pixi install --environment dev   # includes test dependencies
+npm install --prefix frontend     # frontend node_modules
 
-```powershell
-cd frontend
-npm install
-npm run dev
+# Start backend
+pixi run backend
+
+# Start frontend (in another terminal)
+pixi run frontend
 ```
 
 Open `http://localhost:5175`.
@@ -52,28 +51,23 @@ Database: SQLite local file, no network port
 API base: http://127.0.0.1:8011
 ```
 
-## One-command Local Start
+## Available Tasks
 
-```powershell
-.\scripts\start-local.ps1
-```
+```bash
+pixi run backend          # Start FastAPI backend (dev mode, auto-reload)
+pixi run frontend         # Start Vite frontend dev server
+pixi run frontend:build   # Build frontend for production
+pixi run frontend:preview # Preview production build
 
-Or start services separately:
+# Verification
+pixi run check:ports      # Check if local ports are free
+pixi run check:health     # Check backend health endpoint
+pixi run test:smoke       # Run smoke tests
+pixi run clear:test-data  # Clear local test data
 
-```powershell
-.\scripts\start-backend.ps1
-.\scripts\start-frontend.ps1
-```
-
-## Local Verification
-
-Run from the project root:
-
-```powershell
-npm run check
-npm run check:ports
-npm run check:health
-npm run test:smoke
+# Dev environment (includes test dependencies)
+pixi run -e dev test            # Run all backend tests
+pixi run -e dev generate:fixtures  # Generate sample docx fixtures
 ```
 
 These commands verify fixed local ports, environment files, `VITE_API_BASE_URL`, backend `/health`, frontend reachability, and the frontend-to-backend health call.

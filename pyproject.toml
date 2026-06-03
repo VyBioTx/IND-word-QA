@@ -1,0 +1,41 @@
+[project]
+dependencies = ["fastapi>=0.136.3,<0.137", "uvicorn[standard]>=0.48.0,<0.49", "sqlmodel>=0.0.38,<0.0.39", "python-multipart>=0.0.30,<0.0.31", "python-docx>=1.2.0,<2", "lxml>=6.1.1,<7", "openpyxl>=3.1.5,<4"]
+name = "IND-word-QA"
+requires-python = ">= 3.11"
+version = "0.1.0"
+
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[tool.pixi.pypi-dependencies]
+ind_word_qa = { path = ".", editable = true }
+
+[tool.pixi.tasks]
+"check:ports" = "node scripts/check-local.mjs ports"
+"check:health" = "node scripts/check-local.mjs health"
+"test:smoke" = "node scripts/smoke-test.mjs"
+backend = "cd backend && uvicorn app.main:app --host 127.0.0.1 --port 8011 --reload"
+frontend = "cd frontend && npm run dev"
+"frontend:build" = "cd frontend && npm run build"
+"frontend:preview" = "cd frontend && npm run preview"
+"clear:test-data" = "python scripts/clear-local-data.py --yes"
+
+[tool.pixi.feature.dev.tasks]
+test = "cd backend && python -m pytest"
+"generate:fixtures" = "cd backend && python app/tests/fixtures/generate_sample_docx.py"
+
+[tool.pixi.dependencies]
+python = ">=3.14.5,<3.15"
+nodejs = ">=26.3.0,<26.4"
+
+[tool.pixi.feature.dev.pypi-dependencies]
+pytest = ">=9.0.3,<10"
+httpx = ">=0.28.1,<0.29"
+
+[tool.pixi.environments]
+dev = ["dev"]
