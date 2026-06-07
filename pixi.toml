@@ -31,7 +31,10 @@ pytest = ">=9.0.3,<10"
 httpx = ">=0.28.1,<0.29"
 
 [feature.dev.tasks]
-test = "cd backend && python -m pytest"
+test = "cd backend && python -m pytest -v --tb=short app/tests/"
+"test:comprehensive" = "cd backend && python -m pytest -v app/tests/test_comprehensive_rules.py -s --tb=short"
+"test:acceptance" = "cd backend && python -m pytest -v app/tests/test_acceptance_sample_docx.py -s --tb=short"
+"test:all" = "cd backend && python -m pytest -v --tb=short app/tests/"
 "generate:fixtures" = "cd backend && python app/tests/fixtures/generate_sample_docx.py"
 
 [environments]
