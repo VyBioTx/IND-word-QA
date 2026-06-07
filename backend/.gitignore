@@ -1,0 +1,7 @@
+# pixi environments
+.pixi/*
+!.pixi/config.toml
+
+# generated test reports (contain real document excerpts)
+test_report_synthetic.txt
+modified_report_test_result.txt
