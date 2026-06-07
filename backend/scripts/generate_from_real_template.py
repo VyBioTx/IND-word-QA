@@ -96,17 +96,47 @@ def _inject_xml(path: Path) -> None:
     with ZipFile(str(path), "r") as source:
         members = {name: source.read(name) for name in source.namelist()}
 
+    # Register comments.xml in [Content_Types].xml
+    ct_xml = members["[Content_Types].xml"].decode("utf-8")
+    if "word/comments.xml" not in ct_xml:
+        ct_xml = ct_xml.replace(
+            "</Override>" if "</Override>" in ct_xml else "</Types>",
+            '</Override><Override PartName="/word/comments.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml"/>'
+            if "</Override>" in ct_xml
+            else '<Override PartName="/word/comments.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml"/></Types>',
+            1,
+        )
+    members["[Content_Types].xml"] = ct_xml.encode("utf-8")
+
+    # Add comments relationship in document.xml.rels
+    rels_path = "word/_rels/document.xml.rels"
+    rels_xml = members[rels_path].decode("utf-8")
+    if "comments" not in rels_xml:
+        import re
+        existing_ids = re.findall(r'Id="rId(\d+)"', rels_xml)
+        next_id = max(int(x) for x in existing_ids) + 1 if existing_ids else 1
+        rels_xml = rels_xml.replace(
+            "</Relationships>",
+            f'<Relationship Id="rId{next_id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments" Target="comments.xml"/></Relationships>',
+            1,
+        )
+    members[rels_path] = rels_xml.encode("utf-8")
+
     # Insert a Word comment
-    members["word/comments.xml"] = b"""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    comment_xml = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:comments xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
   <w:comment w:id="0" w:author="Reviewer" w:date="2022-08-01T10:00:00Z">
     <w:p><w:r><w:t>Please verify the statistical analysis for Group 5.</w:t></w:r></w:p>
   </w:comment>
 </w:comments>"""
+    members["word/comments.xml"] = comment_xml.encode("utf-8")
 
-    # Inject a tracked change
+    # Inject a tracked change with a unique w:id
     document_xml = members["word/document.xml"].decode("utf-8")
-    insert_marker = '<w:ins w:id="2" w:author="Author" w:date="2022-07-30T14:00:00Z"><w:r><w:t>revised value</w:t></w:r></w:ins>'
+    import re
+    existing_ins_ids = [int(x) for x in re.findall(r'w:id="(\d+)"', document_xml) if x.isdigit()]
+    next_id = max(existing_ins_ids) + 1 if existing_ins_ids else 2
+    insert_marker = f'<w:ins w:id="{next_id}" w:author="Author" w:date="2022-07-30T14:00:00Z"><w:r><w:t>revised value</w:t></w:r></w:ins>'
     document_xml = document_xml.replace("<w:body>", f"<w:body>{insert_marker}", 1)
     members["word/document.xml"] = document_xml.encode("utf-8")
 
