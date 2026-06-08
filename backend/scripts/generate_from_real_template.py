@@ -29,23 +29,12 @@ def _make_p(text: str) -> etree.Element:
     return p.getparent()
 
 
-def _make_heading(text: str, level: int = 2) -> etree.Element:
-    p = etree.Element(f"{{{W}}}p", nsmap=NSMAP)
-    pPr = etree.SubElement(p, f"{{{W}}}pPr")
-    pStyle = etree.SubElement(pPr, f"{{{W}}}pStyle")
-    pStyle.set(f"{{{W}}}val", f"Heading{level}")
-    r = etree.SubElement(p, f"{{{W}}}r")
-    t = etree.SubElement(r, f"{{{W}}}t")
-    t.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
-    t.text = text
-    return p
+
 
 
 def _make_table(headers: list[str], rows: list[list[str]], col_widths: list[str] | None = None) -> etree.Element:
     tbl = etree.Element(f"{{{W}}}tbl", nsmap=NSMAP)
     tblPr = etree.SubElement(tbl, f"{{{W}}}tblPr")
-    tblStyle = etree.SubElement(tblPr, f"{{{W}}}tblStyle")
-    tblStyle.set(f"{{{W}}}val", "TableGrid")
     tblW = etree.SubElement(tblPr, f"{{{W}}}tblW")
     tblW.set(f"{{{W}}}w", "5000")
     tblW.set(f"{{{W}}}type", "pct")
@@ -107,8 +96,8 @@ def copy_and_inject(path: Path = OUTPUT) -> Path:
     body.append(_make_p("As shown in Figure 10, the tumor growth was inhibited."))
     body.append(_make_p("Detailed PK parameters are listed in Table 25."))
     # ---- HEAD-001: Heading numbering gap ----
-    body.append(_make_heading("6.1  Summary of Findings"))
-    body.append(_make_heading("6.3  Future Directions"))
+    body.append(_make_p("6.1  Summary of Findings"))
+    body.append(_make_p("6.3  Future Directions"))
     # ---- ABBR-001: Undefined abbreviation ----
     body.append(_make_p("MTD was determined based on the toxicity profile observed during the study."))
     body.append(_make_p("SAE were reported and followed up according to the protocol."))
