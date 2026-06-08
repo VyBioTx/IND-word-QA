@@ -86,6 +86,11 @@ def copy_and_inject(path: Path = OUTPUT) -> Path:
     doc_root = etree.fromstring(doc_xml.encode("utf-8"))
     body = doc_root.find(f"{{{W}}}body")
 
+    # Save sectPr (must be absolute last element in body), then remove it
+    sectPrs = body.findall(f"{{{W}}}sectPr")
+    for sp in sectPrs:
+        body.remove(sp)
+
     # ---- TEXT-001: Duplicate word ----
     body.append(_make_p("The the study demonstrated significant antitumor activity."))
     # ---- TEXT-002: Repeated spaces ----
@@ -114,48 +119,20 @@ def copy_and_inject(path: Path = OUTPUT) -> Path:
     body.append(_make_p("PROTOCOL-001 was followed for all procedures."))
     body.append(_make_p("All deviations from PROTOCOL001 were documented."))
 
+    # Re-add sectPr as the last element in body
+    for sp in sectPrs:
+        body.append(sp)
+
     members["word/document.xml"] = etree.tostring(doc_root, xml_declaration=True, encoding="UTF-8", standalone=True)
 
     rels_path = "word/_rels/document.xml.rels"
 
     # ---- WORD-001: Header/footer version mismatch ----
-    # The original has no header file — create one
-    header_xml = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
-       xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-  <w:p><w:r><w:t>Protocol v2.0</w:t></w:r></w:p>
-</w:hdr>"""
-    members["word/header1.xml"] = header_xml.encode("utf-8")
-
-    # Register header1.xml in Content_Types
-    ct_xml = members["[Content_Types].xml"].decode("utf-8")
-    if "word/header1.xml" not in ct_xml:
-        ct_xml = ct_xml.replace("</Types>", '<Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/></Types>', 1)
-    members["[Content_Types].xml"] = ct_xml.encode("utf-8")
-
-    # Add header relationship in document.xml.rels
-    rels_xml = members[rels_path].decode("utf-8")
-    if "header1" not in rels_xml:
-        existing_ids = re.findall(r'Id="rId(\d+)"', rels_xml)
-        next_id = max(int(x) for x in existing_ids) + 1 if existing_ids else 1
-        rels_xml = rels_xml.replace("</Relationships>", f'<Relationship Id="rId{next_id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/></Relationships>', 1)
-        header_rid = f"rId{next_id}"
-    members[rels_path] = rels_xml.encode("utf-8")
-
-    # Add headerReference to sectPr in document body
-    for sectPr in body.findall(f"{{{W}}}sectPr"):
-        existing_hdr = sectPr.find(f"{{{W}}}headerReference")
-        if existing_hdr is None:
-            hdr_ref = etree.SubElement(sectPr, f"{{{W}}}headerReference")
-            hdr_ref.set(f"{{{W}}}type", "default")
-            hdr_ref.set(f"{{{R}}}id", header_rid)
-
-    members["word/document.xml"] = etree.tostring(doc_root, xml_declaration=True, encoding="UTF-8", standalone=True)
-
+    # Put TWO version strings in footer so the header/footer rule catches them
     for fname in ["word/footer1.xml"]:
         if fname in members:
             root = etree.fromstring(members[fname])
-            root.insert(0, _make_p("Confidential - Version 2.1"))
+            root.insert(0, _make_p("Protocol v2.0 / Confidential - Version 2.1"))
             members[fname] = etree.tostring(root, xml_declaration=True, encoding="UTF-8", standalone=True)
 
     # ---- WORD-002: Insert a Word comment ----
